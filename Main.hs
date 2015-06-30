@@ -4,13 +4,12 @@ import Simulation
 
 import qualified UI.HSCurses.Curses as Curses
 import Control.Monad(replicateM)
-import Control.Concurrent(threadDelay)
 import System.Random
 import Data.List(intersperse)
 import Data.Array
 
 delay :: Int
-delay = 0
+delay = 100
 density :: Float
 density = 0.375
 
