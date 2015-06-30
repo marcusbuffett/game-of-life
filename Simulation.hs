@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Simulation where--(step, Board, State(..), Coord, cols, rows) where
+module Simulation where
+import Data.Array
 
 data State = Alive | Dead deriving (Eq)
-type Row = [State]
-type Grid = [Row]
-data Board = Board {bGrid :: Grid, bRows :: Int, bCols :: Int}
+type Row = Array Int State
+type Grid = Array Int Row
+
+data Board = Board {bGrid :: Grid, bRows :: Int, bCols :: Int} deriving (Show)
 data Coord = Coord Int Int deriving (Show)
 
 instance Num Coord where
@@ -12,7 +14,7 @@ instance Num Coord where
   Coord a b - Coord c d = Coord (a-c) (b-d)
 
 instance Show State where
-  show Alive = "●"
+  show Alive = "■"
   show Dead = " "
 
 directions :: [Coord]
@@ -34,7 +36,7 @@ numNeighbors :: Board -> Coord -> Int
 numNeighbors board coord = length $ neighbors board coord
 
 state :: Board -> Coord -> State
-state board (Coord y x) = (bGrid board) !! y !! x
+state board (Coord y x) = (bGrid board) ! y ! x
 
 singleStep :: Board -> Coord -> State
 singleStep board coord = stepCell currentState bors
@@ -51,7 +53,9 @@ stepCell Alive n
   | otherwise = Alive
 
 step :: Board -> Board
-step board = board {bGrid = map stepRow [0..(bRows board)-1]}
+step board = board {bGrid = newGrid}
   where
-    stepRow :: Int -> [State]
-    stepRow y = [singleStep board (Coord y x) | x <- [0..(bCols board)-1]]
+    newGrid :: Grid
+    newGrid = array (0, bRows board-1) $ zip [0..bCols board-1] (map stepRow [0..bRows board-1])
+    stepRow :: Int -> Row
+    stepRow y = array (0,bCols board-1) $ zip [0..bCols board - 1] [singleStep board (Coord y x) | x <- [0..(bCols board)-1]]

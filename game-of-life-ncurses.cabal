@@ -21,7 +21,9 @@ executable game-of-life-ncurses
   -- other-extensions:    
   build-depends:       base >=4.7 && <4.8,
                        random,
-                       hscurses
+                       hscurses,
+                       array,
+                       text
   -- hs-source-dirs:      
   default-language:    Haskell2010
-  ghc-options:         -O2 -prof -rtsopts -prof -auto-all -fforce-recomp
+  ghc-options:         -O2 -prof -rtsopts -prof -auto-all -fforce-recomp -static

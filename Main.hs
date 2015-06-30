@@ -1,80 +1,71 @@
+module Main where
+
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
 import Simulation
-import Control.Monad(forever, replicateM)
+import Control.Monad(replicateM)
 import Control.Concurrent(threadDelay)
 import qualified UI.HSCurses.CursesHelper as CursesH
 import qualified UI.HSCurses.Curses as Curses
 import System.Random
 import Data.List(intersperse)
+import Data.Array
 
-exampleBoard :: Grid
-exampleBoard = [[Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Alive, Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Alive , Alive , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Alive , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]  ,
-                [Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead , Dead]]
+delay :: Int
+density :: Float
+gens :: Int
+delay = 0
+density = 0.37
+gens = 500
 
-randomboard :: Int -> Int -> Float -> IO Board
-randomboard rows cols density = replicateM rows randomRow >>= \grid -> return $ Board {bGrid = grid, bRows = rows, bCols = cols}
+randomBoard :: Int -> Int -> IO Board
+randomBoard rows cols = randomGrid rows cols >>= 
+                                \grid -> return $ Board {bGrid = grid, bRows = rows, bCols = cols}
+randomGrid :: Int -> Int -> IO Grid
+randomGrid rs cs = replicateM cs randomRow >>= \rows -> return $ array (0, rs-1) (zip [0..rs-1] rows)
   where
-    randomRow :: IO [State]
-    randomRow = replicateM cols (randomIO >>= randomCell)
-    randomCell :: Float -> IO State
-    randomCell r
-      | r < density  = return Alive
-      | r >= density = return Dead
-      | otherwise    = return Dead
-  
+  randomRow :: IO (Array Int State)
+  randomRow = randomListOfCells >>= \cells -> return $ array (0,cs-1) (zip [0..cs-1] cells)
+  randomListOfCells = replicateM cs (randomIO >>= randomCell)
+  randomCell :: Float -> IO State
+  randomCell r
+    | r < density  = return Alive
+    | r >= density = return Dead
+    | otherwise    = return Dead
+
 
 main :: IO ()
 main = do
   window <- Curses.initScr
   _ <- Curses.cursSet Curses.CursorInvisible
-  (lines, cols) <- Curses.scrSize
-  randomboard (lines-1) (cols-1) 0.375 >>= (life 0 window)
-  _ <- Curses.cursSet Curses.CursorVisible
-  Curses.refresh
+  _ <- Curses.raw True
+  (rows, cols) <- Curses.scrSize
+  randomBoard (rows-1) (cols-1) >>= (life 0 window)
+  Curses.resetParams
   CursesH.end
-  print cols
-  print lines
-  {- _ <- Curses.cursSet Curses.CursorVisible -}
+
+life :: Int -> Curses.Window -> Board -> IO ()
+life gen window board
+  | gen > gens = return ()
+  | otherwise = do
+    _ <- drawBoard board window
+    Curses.timeout 0
+    threadDelay delay
+    Curses.getch >>= \ch -> case Curses.decodeKey ch of 
+      Curses.KeyUnknown _ -> life (gen+1) window (step board)
+      _                   -> return ()
 
 drawBoard :: Board -> Curses.Window -> IO ()
 drawBoard board window = do
   Curses.move 0 0
   Curses.wAddStr window (boardRep board)
   Curses.wRefresh window
-  {- print $ boardRep board -}
 
 boardRep :: Board -> String
-boardRep board = concat . intersperse "\n" $ map rowStrings (bGrid board)
+boardRep board = concat . intersperse "\n" $ [rowStrings r | r <- [0..rs-1]]
   where
-  rowStrings row = concat $ map show row
-
-drawRow :: Curses.Window -> String -> IO ()
-drawRow window row = do
-  Curses.wAddStr window row 
-  {- (y, x) <- Curses.getYX window -}
-  {- Curses.move (y) x -}
-  
-life :: Int -> Curses.Window -> Board -> IO ()
-life gen window board
-  | gen > 1000 = return ()
-  | otherwise = do
-    _ <- drawBoard board window
-    {- threadDelay 2000000 -}
-    life (gen+1) window (step board)
-
-
-rowStrings :: Board -> [String]
-rowStrings board = map rowString (bGrid board)
-  where
-    rowString :: [State] -> String
-    rowString row = (concat $ map show row) ++ "\n"
+  rowStrings :: Int -> String
+  rowStrings r = concat . intersperse "" $ [show (grid ! r ! c) | c <- [0..cs-1]]
+  rs = bRows board 
+  cs = bCols board 
+  grid = bGrid board
