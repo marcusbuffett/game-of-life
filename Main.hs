@@ -13,10 +13,8 @@ import Data.Array
 
 delay :: Int
 density :: Float
-gens :: Int
 delay = 0
-density = 0.37
-gens = 500
+density = 0.375
 
 randomBoard :: Int -> Int -> IO Board
 randomBoard rows cols = randomGrid rows cols >>= 
@@ -40,14 +38,12 @@ main = do
   _ <- Curses.cursSet Curses.CursorInvisible
   _ <- Curses.raw True
   (rows, cols) <- Curses.scrSize
-  randomBoard (rows-1) (cols-1) >>= (life 0 window)
+  randomBoard (rows) (cols-1) >>= (life 0 window)
   Curses.resetParams
   CursesH.end
 
 life :: Int -> Curses.Window -> Board -> IO ()
-life gen window board
-  | gen > gens = return ()
-  | otherwise = do
+life gen window board = do
     _ <- drawBoard board window
     Curses.timeout 0
     threadDelay delay
@@ -65,7 +61,7 @@ boardRep :: Board -> String
 boardRep board = concat . intersperse "\n" $ [rowStrings r | r <- [0..rs-1]]
   where
   rowStrings :: Int -> String
-  rowStrings r = concat . intersperse "" $ [show (grid ! r ! c) | c <- [0..cs-1]]
+  rowStrings r = concat [show (grid ! r ! c) | c <- [0..cs-1]]
   rs = bRows board 
   cs = bCols board 
   grid = bGrid board
