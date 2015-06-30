@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Simulation where
+
 import Data.Array
 
 data State = Alive | Dead deriving (Eq)
@@ -18,19 +18,19 @@ instance Show State where
   show Dead = " "
 
 directions :: [Coord]
-directions = [Coord y x | y <- [-1..1], x <- [-1..1], not (x == 0 && y == 0)]
+directions = [Coord y x | y <- [-1..1], x <- [-1..1], not (x==0 && y==0)]
 
 neighbors :: Board -> Coord -> [Coord]
 neighbors board coord = filter (\c -> state board c == Alive) validCoords
   where
-    validCoords = filter (validCoord board) coordsAround
-    coordsAround = map (+ coord) directions
+  validCoords = filter (validCoord board) coordsAround
+  coordsAround = map (+ coord) directions
 
 validCoord :: Board -> Coord -> Bool
 validCoord board (Coord y x) = xValid && yValid
   where 
-    xValid = x >= 0 && x < bCols board
-    yValid = y >= 0 && y < bRows board
+  xValid = x >= 0 && x < bCols board
+  yValid = y >= 0 && y < bRows board
 
 numNeighbors :: Board -> Coord -> Int
 numNeighbors board coord = length $ neighbors board coord
@@ -41,8 +41,8 @@ state board (Coord y x) = (bGrid board) ! y ! x
 singleStep :: Board -> Coord -> State
 singleStep board coord = stepCell currentState bors
   where 
-    currentState = state board coord
-    bors = numNeighbors board coord
+  currentState = state board coord
+  bors = numNeighbors board coord
 
 stepCell :: State -> Int -> State
 stepCell Dead 3 = Alive
@@ -56,6 +56,11 @@ step :: Board -> Board
 step board = board {bGrid = newGrid}
   where
     newGrid :: Grid
-    newGrid = array (0, bRows board-1) $ zip [0..bCols board-1] (map stepRow [0..bRows board-1])
-    stepRow :: Int -> Row
-    stepRow y = array (0,bCols board-1) $ zip [0..bCols board - 1] [singleStep board (Coord y x) | x <- [0..(bCols board)-1]]
+    newGrid = listArray (0, rows-1) $ map newRow [0..rows-1]
+
+    newRow :: Int -> Row
+    newRow y = listArray (0,cols-1)
+                  [singleStep board (Coord y x) | x <- [0..cols-1]]
+
+    cols = bCols board
+    rows = bRows board 
