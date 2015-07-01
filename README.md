@@ -6,7 +6,7 @@ This is an implementation of Conway's Game of Life written in Haskell and using 
 
 You'll need haskell and cabal on your system. Check out the Haskell platform for an easy setup.
 
-Run the following :
+Run the following if you have cabal installed :
 
     cabal install game-of-life
 
