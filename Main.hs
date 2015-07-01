@@ -5,31 +5,32 @@ import Simulation
 import qualified UI.HSCurses.Curses as Curses
 import Control.Monad(replicateM)
 import System.Random
+import Control.Concurrent(threadDelay)
 import Data.List(intersperse)
 import Data.Array
 
 delay :: Int
-delay = 100
+delay = 50000
 density :: Float
-density = 0.375
+density = 0.37
 
 main :: IO ()
 main = do
   window <- Curses.initScr
   Curses.raw True
   _ <- Curses.cursSet Curses.CursorInvisible
+  Curses.timeout 0
   (rows, cols) <- Curses.scrSize
-  randomBoard (rows) (cols-1) >>= life 1000 window
+  randomBoard (rows) (cols-1) >>= life window
   Curses.resetParams
   Curses.endWin
 
-life :: Int -> Curses.Window -> Board -> IO ()
-life 0 _ _ = return ()
-life gens window board = do
+life :: Curses.Window -> Board -> IO ()
+life window board = do
     _ <- drawBoard board window
-    Curses.timeout delay
+    threadDelay delay
     Curses.getch >>= \ch -> case Curses.decodeKey ch of 
-      Curses.KeyUnknown _ -> life (gens-1) window (step board)
+      Curses.KeyUnknown _ -> life window (step board)
       _                   -> return ()
 
 drawBoard :: Board -> Curses.Window -> IO ()
