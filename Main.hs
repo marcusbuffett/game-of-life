@@ -20,19 +20,26 @@ density = 0.37
 main :: IO ()
 main = do
   window <- Curses.initScr
+  -- similar to cbreak mode, keys are passed immediately
+  -- (includes control-flow keys like ^-C, ^-D, etc)
   Curses.raw True
   _ <- Curses.cursSet Curses.CursorInvisible
   Curses.timeout 0
+  -- Get screen size for board
   (rows, cols) <- Curses.scrSize
   randomBoard rows (cols-1) >>= life window
+  -- Reset invisible cursor, timeout, raw, etc.
   Curses.resetParams
   Curses.endWin
 
 life :: Curses.Window -> Board -> IO ()
 life window board = do
     _ <- drawBoard board window
+    -- Ideally should take into account how long it took to
+    -- draw the board
     threadDelay delay
     Curses.getch >>= \ch -> case Curses.decodeKey ch of 
+      -- KeyUnknown means no key was pressed
       Curses.KeyUnknown _ -> life window (step board)
       _                   -> return ()
 
