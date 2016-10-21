@@ -1,0 +1,7 @@
+resolver: lts-7.4
+packages:
+- '.'
+extra-deps:
+- hscurses-1.4.2.0
+flags: {}
+extra-package-dbs: []

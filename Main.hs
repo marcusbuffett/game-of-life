@@ -6,11 +6,14 @@ import qualified UI.HSCurses.Curses as Curses
 import Control.Monad(replicateM)
 import System.Random
 import Control.Concurrent(threadDelay)
-import Data.List(intersperse)
+import Data.List(intercalate)
 import Data.Array
 
+-- Delay between iterations (μs)
 delay :: Int
 delay = 50000
+
+-- Probability of a cell being Alive on board generation
 density :: Float
 density = 0.37
 
@@ -21,7 +24,7 @@ main = do
   _ <- Curses.cursSet Curses.CursorInvisible
   Curses.timeout 0
   (rows, cols) <- Curses.scrSize
-  randomBoard (rows) (cols-1) >>= life window
+  randomBoard rows (cols-1) >>= life window
   Curses.resetParams
   Curses.endWin
 
@@ -40,7 +43,7 @@ drawBoard board window = do
   Curses.wRefresh window
 
 boardRep :: Board -> String
-boardRep board = concat . intersperse "\n" $ [rowStrings r | r <- [0..rs-1]]
+boardRep board = intercalate "\n" [rowStrings r | r <- [0..rs-1]]
   where
   rowStrings :: Int -> String
   rowStrings r = concat [show (grid ! r ! c) | c <- [0..cs-1]]
@@ -59,7 +62,7 @@ randomGrid rs cs = replicateM cs randomRow >>= \rows -> return $ listArray (0, r
   randomRow = randomListOfCells >>= \cells -> return $ listArray (0, cs-1) cells
 
   randomListOfCells :: IO [State]
-  randomListOfCells = replicateM cs randomIO >>= return . map randomCell
+  randomListOfCells = fmap (map randomCell) (replicateM cs randomIO)
 
   randomCell :: Float -> State
   randomCell r

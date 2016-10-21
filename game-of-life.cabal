@@ -20,7 +20,7 @@ executable game-of-life
   main-is:             Main.hs
   other-modules:       Simulation
   -- other-extensions:    
-  build-depends:       base >=4.7 && <4.8,
+  build-depends:       base >=4.7 && <5,
                        random,
                        hscurses,
                        array,
@@ -28,3 +28,20 @@ executable game-of-life
   -- hs-source-dirs:      
   default-language:    Haskell2010
   -- ghc-options:         -O2
+
+test-suite spec
+  type:
+      exitcode-stdio-1.0
+  ghc-options:
+      -Wall
+  hs-source-dirs:
+      test,
+      ./
+  main-is:
+      Spec.hs
+  default-language:    Haskell2010
+  other-modules:       Simulation
+  build-depends:
+      base >=4.7 && <5
+    , hspec   == 2.*
+    , array
