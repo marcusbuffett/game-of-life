@@ -41,7 +41,7 @@ describeStep = do
       shouldBe True $ 
         test_game start 1 expected_end
                   
-    it "Should progress correctly" $ do
+    it "should progress correctly" $ do
       let zeroth_step = [
                       [0, 1, 0],
                       [1, 1, 1],
@@ -60,7 +60,7 @@ describeStep = do
 
       let board = toBoard zeroth_step
       let two_steps = fmap toTestFormat $ (take 3 . iterate step) board
-      shouldBe two_steps [zeroth_step, first_step, second_step]
+      two_steps `shouldBe` [zeroth_step, first_step, second_step]
 
 
 test_game :: [[Int]] -> Int -> [[Int]] -> Bool
