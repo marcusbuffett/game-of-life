@@ -8,6 +8,11 @@ import Test.QuickCheck
 main :: IO ()
 main = hspec spec
 
+-- QuickCheck is a library that helps check properties. It
+-- relies on a typeclass called Arbitrary to generate, as
+-- the name implies, arbitrary instances of types. The below
+-- code makes Coord an instance of Arbitrary, which allows
+-- QuickCheck to generate arbitrary Coords
 instance Arbitrary Coord where
   arbitrary = Coord <$> r <*> r
     where r = arbitrary
@@ -24,6 +29,11 @@ spec = do
     it "should revive dead cells if num_neighbors is 3" $
       stepCell Dead 3 `shouldBe` Alive
     it "should not revive dead cells ∀ num_neighbors in [0,3) ∪ (3,8]" $
+      -- mapM_ maps a function that returns a monad over a
+      -- Traversable instance, then discards the results.
+      -- Used when only the side-effects of a function are
+      -- important. In this case the "side-effect" is a test
+      -- case
       mapM_ (\x -> stepCell Dead x `shouldBe` Dead) ([0..2] ++ [4..8])
     it "should kill live cells ∀ num_neighbors in [0,1] ∪ [4,8]" $
       mapM_ (\x -> stepCell Alive x `shouldBe` Dead) ([0..1] ++ [4..8])
@@ -35,6 +45,9 @@ spec = do
       Coord 1 2 <+> Coord 4 5 `shouldBe` Coord 5 7
     it "should satisfy the commutative property" $ do
       let prop_commutative x y = x <+> y == y <+> x
+      -- QuickCheck will generate 100 pairs of arbitrary
+      -- coords and test them against the prop_commutative
+      -- function, failing if any return False
       quickCheck prop_commutative
     it "should satisfy the associative property" $ do
       let prop_associative x y z = (x <+> y) <+> z == x <+> (y <+> z)
