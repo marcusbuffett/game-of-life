@@ -43,19 +43,19 @@ describeStep = do
                   
     it "should progress correctly" $ do
       let zeroth_step = [
-                      [0, 1, 0],
-                      [1, 1, 1],
-                      [0, 1, 0] 
+                      [0, 1, 0, 1],
+                      [1, 1, 1, 1],
+                      [0, 1, 0, 1] 
                     ]
       let first_step = [
-                     [1, 1, 1],
-                     [1, 0, 1],
-                     [1, 1, 1] 
+                     [1, 1, 0, 1],
+                     [1, 0, 0, 1],
+                     [1, 1, 0, 1] 
                    ]
       let second_step = [
-                     [1, 0, 1],
-                     [0, 0, 0],
-                     [1, 0, 1] 
+                     [1, 1, 1, 0],
+                     [0, 0, 0, 1],
+                     [1, 1, 1, 0] 
                    ]
 
       let board = toBoard zeroth_step
