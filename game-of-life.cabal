@@ -23,8 +23,7 @@ executable game-of-life
   build-depends:       base >=4.7 && <5,
                        random,
                        hscurses,
-                       array,
-                       text
+                       array
   -- hs-source-dirs:      
   default-language:    Haskell2010
   -- ghc-options:         -O2
@@ -45,3 +44,6 @@ test-suite spec
       base >=4.7 && <5
     , hspec   == 2.*
     , array
+    , random
+    , hscurses
+    , QuickCheck

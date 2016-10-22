@@ -22,12 +22,15 @@ main = do
   window <- Curses.initScr
   -- similar to cbreak mode, keys are passed immediately
   -- (includes control-flow keys like ^-C, ^-D, etc)
+  -- If control-flow keys weren't passed through, ncurses
+  -- cleanup commands like resetParams and endWin wouldn't
+  -- be run on interrupt
   Curses.raw True
   _ <- Curses.cursSet Curses.CursorInvisible
   Curses.timeout 0
   -- Get screen size for board
-  (rows, cols) <- Curses.scrSize
-  randomBoard rows (cols-1) >>= life window
+  (height, width) <- Curses.scrSize
+  randomBoard height (width-1) >>= life window
   -- Reset invisible cursor, timeout, raw, etc.
   Curses.resetParams
   Curses.endWin
@@ -50,30 +53,17 @@ drawBoard board window = do
   Curses.wRefresh window
 
 boardRep :: Board -> String
-boardRep board = intercalate "\n" [rowStrings r | r <- [0..rs-1]]
-  where
-  rowStrings :: Int -> String
-  rowStrings r = concat [show (grid ! r ! c) | c <- [0..cs-1]]
-  rs = bRows board 
-  cs = bCols board 
-  grid = bGrid board
+boardRep board = intercalate "\n" rows
+  where rows = (concatMap show . elems) <$> elems (bGrid board)
 
 randomBoard :: Int -> Int -> IO Board
-randomBoard rows cols = randomGrid rows cols >>= 
-                                \grid -> return $ Board grid rows cols
+randomBoard h w = randomGrid h w >>= \grid -> return $ Board grid h w
 
 randomGrid :: Int -> Int -> IO Grid
-randomGrid rs cs = replicateM cs randomRow >>= \rows -> return $ listArray (0, rs-1) rows
+randomGrid h w = listToArray <$> replicateM h randomRow
   where
-  randomRow :: IO (Array Int State)
-  randomRow = randomListOfCells >>= \cells -> return $ listArray (0, cs-1) cells
-
-  randomListOfCells :: IO [State]
-  randomListOfCells = fmap (map randomCell) (replicateM cs randomIO)
-
-  randomCell :: Float -> State
-  randomCell r
-    | r < density  = Alive
-    | r >= density = Dead
-    | otherwise    = Dead
-
+    randomRow = listToArray <$> randomListOfCells
+    randomListOfCells = (fmap . fmap) randomCell (replicateM w randomIO)
+    randomCell r
+      | r < density  = Alive
+      | otherwise    = Dead
